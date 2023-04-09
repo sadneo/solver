@@ -28,7 +28,7 @@ pub enum Token {
     Right(Group),
 }
 
-fn parse_number<Iter: Iterator<Item = char>>(char: char, iterator: &mut Peekable<Iter>) -> f64 {
+fn lex_number<Iter: Iterator<Item = char>>(char: char, iterator: &mut Peekable<Iter>) -> f64 {
     let mut buffer = char.to_string();
     iterator.next();
 
@@ -54,7 +54,7 @@ pub fn lex(expression: &String) -> anyhow::Result<Vec<Token>> {
                 iterator.next();
             }
             '0'..='9' | '.' => {
-                let number = parse_number(char, &mut iterator);
+                let number = lex_number(char, &mut iterator);
                 result.push(Token::Number(number));
             }
 
