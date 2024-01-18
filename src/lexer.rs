@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq)]
-pub enum Operator {
+enum Operator {
     Plus,
     Minus,
     Multiply,
@@ -7,14 +7,14 @@ pub enum Operator {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Token {
+enum Token {
     Number(f64),
     Binary(Operator),
     LeftParen,
     RightParen,
 }
 
-pub fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
+fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
     let mut tokens: Vec<Token> = vec![];
 
     let mut iterator = expression.chars().peekable();
