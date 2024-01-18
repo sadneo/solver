@@ -19,7 +19,7 @@ pub enum Token {
     Binary(Operator),
 }
 
-pub fn lex(expression: &str) -> anyhow::Result<Vec<Token>> {
+pub fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
     let mut tokens: Vec<Token> = vec![];
 
     let mut iterator = expression.chars().peekable();
@@ -76,26 +76,26 @@ mod tests {
     }
 
     #[test]
-    fn lex_works() {
+    fn tokenize_works() {
         let expression = String::from("53+110");
         let equal_to = vec![
             Token::Number(53.0),
             Token::Binary(Operator::Plus),
             Token::Number(110.0),
         ];
-        let result = lex(&expression).unwrap();
+        let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
     }
 
     #[test]
-    fn lex_decimal() {
+    fn tokenize_decimal() {
         let expression = String::from("5.3 .110 333.");
         let equal_to = vec![
             Token::Number(5.3),
             Token::Number(0.11),
             Token::Number(333.0),
         ];
-        let result = lex(&expression).unwrap();
+        let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
     }
 }
