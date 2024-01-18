@@ -70,6 +70,38 @@ pub fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
     Ok(tokens)
 }
 
+fn match_parenthesis(tokens: Vec<Token>) -> Option<bool> {
+    let mut balancer = 0;
+    for token in tokens {
+        if let Token::LeftParen = token {
+            balancer += 1;
+        } else if let Token::RightParen = token {
+            balancer -= 1;
+        }
+        if balancer < 0 {
+            return Some(false);
+        }
+    }
+
+    if balancer > 0 {
+        Some(true)
+    } else {
+        None
+    }
+}
+
+fn imply_multiplication(mut tokens: Vec<Token>) -> Vec<Token> {
+    for index in 0..tokens.len() - 1 {
+        let token = &tokens[index];
+        let next_token = &tokens[index + 1];
+        if *token == Token::RightParen && *next_token == Token::LeftParen {
+            tokens.insert(index + 1, Token::Binary(Operator::Multiply));
+        }
+    }
+
+    tokens
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
