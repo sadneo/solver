@@ -24,21 +24,20 @@ pub fn lex(expression: &str) -> anyhow::Result<Vec<Token>> {
 
     let mut iterator = expression.chars().peekable();
 
-    while let Some(char) = iterator.next() {
+    while let Some(char) = iterator.peek() {
         match char {
             '0'..='9' | '.' => {
                 let mut buffer = char.to_string();
                 iterator.next();
 
                 while let Some(new) = iterator.peek() {
-                    match char {
-                        '0'..='9' | '.' => buffer.push(*new),
-                        _ => break,
+                    if !matches!(new, '0'..='9' | '.') {
+                        break;
                     }
+                    buffer.push(*new);
                     iterator.next();
                 }
 
-                println!("{}", buffer);
                 let number = buffer.parse::<f64>().unwrap();
                 tokens.push(Token::Number(number));
             },
