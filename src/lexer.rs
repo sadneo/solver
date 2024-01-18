@@ -7,16 +7,11 @@ pub enum Operator {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Group {
-    Parenthesis,
-    Bracket,
-    Brace,
-}
-
-#[derive(Debug, PartialEq)]
 pub enum Token {
     Number(f64),
     Binary(Operator),
+    LeftParen,
+    RightParen,
 }
 
 pub fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
@@ -55,6 +50,14 @@ pub fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
             },
             '/' => {
                 tokens.push(Token::Binary(Operator::Divide));
+                iterator.next();
+            },
+            '(' => {
+                tokens.push(Token::LeftParen);
+                iterator.next();
+            },
+            ')' => {
+                tokens.push(Token::RightParen);
                 iterator.next();
             },
             ' ' => {
