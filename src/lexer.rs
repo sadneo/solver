@@ -90,7 +90,7 @@ fn imply_multiplication(mut tokens: Vec<Token>) -> Vec<Token> {
         let token = &tokens[index];
         let next_token = &tokens[index + 1];
         if *token == Token::RightParen && *next_token == Token::LeftParen {
-            tokens.insert(index + 1, Token::Multiply));
+            tokens.insert(index + 1, Token::Multiply);
         }
     }
 
