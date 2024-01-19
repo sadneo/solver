@@ -145,4 +145,11 @@ mod tests {
         let tokens = vec![Token::LeftParen, Token::RightParen, Token::RightParen];
         assert_eq!(match_parenthesis(tokens), Some(false));
     }
+
+    #[test]
+    fn imply_multiplication_works() {
+        let tokens = vec![Token::LeftParen, Token::RightParen, Token::LeftParen, Token::RightParen];
+        let expected_result = vec![Token::LeftParen, Token::RightParen, Token::Binary(Operator::Multiply), Token::LeftParen, Token::RightParen];
+        assert_eq!(imply_multiplication(tokens), expected_result);
+    }
 }
