@@ -65,7 +65,7 @@ fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
     Ok(tokens)
 }
 
-fn match_parenthesis(tokens: Vec<Token>) -> Option<bool> {
+fn match_parenthesis(tokens: &[Token]) -> Option<bool> {
     let mut balancer = 0;
     for token in tokens {
         if let Token::LeftParen = token {
@@ -132,13 +132,13 @@ mod tests {
     #[test]
     fn match_parenthesis_works() {
         let tokens = vec![Token::LeftParen, Token::RightParen];
-        assert_eq!(match_parenthesis(tokens), None);
+        assert_eq!(match_parenthesis(&tokens), None);
 
         let tokens = vec![Token::LeftParen, Token::LeftParen, Token::RightParen];
-        assert_eq!(match_parenthesis(tokens), Some(true));
+        assert_eq!(match_parenthesis(&tokens), Some(true));
 
         let tokens = vec![Token::LeftParen, Token::RightParen, Token::RightParen];
-        assert_eq!(match_parenthesis(tokens), Some(false));
+        assert_eq!(match_parenthesis(&tokens), Some(false));
     }
 
     #[test]
