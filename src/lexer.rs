@@ -133,4 +133,16 @@ mod tests {
         let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
     }
+
+    #[test]
+    fn match_parenthesis_works() {
+        let tokens = vec![Token::LeftParen, Token::RightParen];
+        assert_eq!(match_parenthesis(tokens), None);
+
+        let tokens = vec![Token::LeftParen, Token::LeftParen, Token::RightParen];
+        assert_eq!(match_parenthesis(tokens), Some(true));
+
+        let tokens = vec![Token::LeftParen, Token::RightParen, Token::RightParen];
+        assert_eq!(match_parenthesis(tokens), Some(false));
+    }
 }
