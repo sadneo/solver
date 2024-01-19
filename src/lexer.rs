@@ -1,15 +1,10 @@
 #[derive(Debug, PartialEq)]
-enum Operator {
+enum Token {
+    Number(f64),
     Plus,
     Minus,
     Multiply,
     Divide,
-}
-
-#[derive(Debug, PartialEq)]
-enum Token {
-    Number(f64),
-    Binary(Operator),
     LeftParen,
     RightParen,
 }
@@ -37,19 +32,19 @@ fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
                 tokens.push(Token::Number(number));
             },
             '+' => {
-                tokens.push(Token::Binary(Operator::Plus));
+                tokens.push(Token::Plus);
                 iterator.next();
             },
             '-' => {
-                tokens.push(Token::Binary(Operator::Minus));
+                tokens.push(Token::Minus);
                 iterator.next();
             },
             '*' => {
-                tokens.push(Token::Binary(Operator::Multiply));
+                tokens.push(Token::Multiply);
                 iterator.next();
             },
             '/' => {
-                tokens.push(Token::Binary(Operator::Divide));
+                tokens.push(Token::Divide);
                 iterator.next();
             },
             '(' => {
@@ -95,7 +90,7 @@ fn imply_multiplication(mut tokens: Vec<Token>) -> Vec<Token> {
         let token = &tokens[index];
         let next_token = &tokens[index + 1];
         if *token == Token::RightParen && *next_token == Token::LeftParen {
-            tokens.insert(index + 1, Token::Binary(Operator::Multiply));
+            tokens.insert(index + 1, Token::Multiply));
         }
     }
 
@@ -115,7 +110,7 @@ mod tests {
         let expression = String::from("53+110");
         let equal_to = vec![
             Token::Number(53.0),
-            Token::Binary(Operator::Plus),
+            Token::Plus,
             Token::Number(110.0),
         ];
         let result = tokenize(&expression).unwrap();
@@ -149,7 +144,7 @@ mod tests {
     #[test]
     fn imply_multiplication_works() {
         let tokens = vec![Token::LeftParen, Token::RightParen, Token::LeftParen, Token::RightParen];
-        let expected_result = vec![Token::LeftParen, Token::RightParen, Token::Binary(Operator::Multiply), Token::LeftParen, Token::RightParen];
+        let expected_result = vec![Token::LeftParen, Token::RightParen, Token::Multiply, Token::LeftParen, Token::RightParen];
         assert_eq!(imply_multiplication(tokens), expected_result);
     }
 }
