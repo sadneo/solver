@@ -5,13 +5,5 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-name = "evaluator"
-path = "src/lexer.rs"
-
-[[bin]]
-name = "inputter"
-path = "src/bin.rs"
-
 [dependencies]
 anyhow = "1.0.70"
