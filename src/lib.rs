@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn prasing() {
+    fn parsing_works() {
         assert_eq!(evaluate("(30)(2)").unwrap(), 60.0);
         assert_eq!(evaluate("30 + 13 * 3").unwrap(), 69.0);
         assert_eq!(evaluate("30 + (8 + 5) * 3").unwrap(), 69.0);
