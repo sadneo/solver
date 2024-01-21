@@ -114,7 +114,6 @@ fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
             Token::Minus => sum -= factor,
             _ => unreachable!(),
         }
-        println!("sum: {}", sum);
     }
 
     sum
@@ -133,7 +132,6 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
             Token::Divide => product /= primary,
             _ => unreachable!(),
         }
-        println!("product: {}", product);
     }
 
     product
@@ -143,7 +141,6 @@ fn parse_primary(tokens: &[Token], pos: &mut usize) -> f64 {
     if let Token::Number(number) = tokens[*pos] {
         *pos += 1;
 
-        println!("number: {}", number);
         number
     } else if let Token::LeftParen = tokens[*pos] {
         *pos += 1;
@@ -151,7 +148,6 @@ fn parse_primary(tokens: &[Token], pos: &mut usize) -> f64 {
         assert!(tokens[*pos] == Token::RightParen, "Expected right paren at {}, found {:?}", pos, tokens[*pos]);
         *pos += 1;
 
-        println!("primary: {}", primary);
         primary
     } else {
         panic!("Expected number or '(' at {}, found {:?}", pos, tokens[*pos])
@@ -170,7 +166,6 @@ pub fn evaluate(expression: &str) -> anyhow::Result<f64> {
     }
 
     let tokens = imply_multiplication(tokens);
-    println!("{:?}", tokens);
     Ok(parse_expr(&tokens, &mut 0))
 }
 
