@@ -1,3 +1,47 @@
+use std::error::Error;
+use std::fmt;
+
+type Result<T> = std::result::Result<T, EvalError>;
+
+#[derive(Debug, Clone)]
+pub struct EvalError {
+    kind: ErrorKind,
+}
+
+impl Error for EvalError {}
+
+impl fmt::Display for EvalError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let message = match self.kind {
+            ErrorKind::InvalidToken => "Invalid token", // token, where
+            ErrorKind::TooManyLeftParen => "Too many left parentheses", // where
+            ErrorKind::TooManyRightParen => "Too many right parentheses", // where
+            ErrorKind::UnexpectedToken => "Unexpected token", // token
+            ErrorKind::DivisionByZero => "Division by zero", // where
+        };
+        write!(f, "{}", message)
+    }
+}
+
+impl EvalError {
+    pub fn new(kind: ErrorKind) -> Self {
+        Self { kind }
+    }
+
+    pub fn kind(&self) -> ErrorKind {
+        self.kind
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ErrorKind {
+    InvalidToken,
+    TooManyLeftParen,
+    TooManyRightParen,
+    UnexpectedToken,
+    DivisionByZero,
+}
+
 #[derive(Debug, PartialEq)]
 enum Token {
     Number(f64),
@@ -9,7 +53,7 @@ enum Token {
     RightParen,
 }
 
-fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
+fn tokenize(expression: &str) -> Result<Vec<Token>> {
     let mut tokens: Vec<Token> = vec![];
 
     let mut iterator = expression.chars().peekable();
@@ -58,14 +102,14 @@ fn tokenize(expression: &str) -> anyhow::Result<Vec<Token>> {
             ' ' => {
                 iterator.next();
             },
-            _ => return Err(anyhow::Error::msg("unknown character in expression")),
+            _ => return Err(EvalError::new(ErrorKind::InvalidToken)),
         }
     }
 
     Ok(tokens)
 }
 
-fn match_parenthesis(tokens: &[Token]) -> Option<bool> {
+fn match_parentheses(tokens: &[Token]) -> Result<()> {
     let mut balancer = 0;
     for token in tokens {
         if let Token::LeftParen = token {
@@ -74,14 +118,14 @@ fn match_parenthesis(tokens: &[Token]) -> Option<bool> {
             balancer -= 1;
         }
         if balancer < 0 {
-            return Some(false);
+            return Err(EvalError::new(ErrorKind::TooManyRightParen));
         }
     }
 
     if balancer > 0 {
-        Some(true)
+        Err(EvalError::new(ErrorKind::TooManyLeftParen))
     } else {
-        None
+        Ok(())
     }
 }
 
@@ -154,16 +198,9 @@ fn parse_primary(tokens: &[Token], pos: &mut usize) -> f64 {
     }
 }
 
-pub fn evaluate(expression: &str) -> anyhow::Result<f64> {
+pub fn evaluate(expression: &str) -> Result<f64> {
     let tokens = tokenize(expression)?;
-    if let Some(too_many_left) = match_parenthesis(&tokens) {
-        let message = if too_many_left {
-            "Too many left parenthesis"
-        } else {
-            "Too many right parenthesis"
-        };
-        return Err(anyhow::Error::msg(message));
-    }
+    match_parentheses(&tokens)?;
 
     let tokens = imply_multiplication(tokens);
     Ok(parse_expr(&tokens, &mut 0))
@@ -202,15 +239,17 @@ mod tests {
     }
 
     #[test]
-    fn match_parenthesis_works() {
+    fn match_parentheses_works() {
         let tokens = vec![Token::LeftParen, Token::RightParen];
-        assert_eq!(match_parenthesis(&tokens), None);
+        assert!(match_parentheses(&tokens).is_ok());
 
         let tokens = vec![Token::LeftParen, Token::LeftParen, Token::RightParen];
-        assert_eq!(match_parenthesis(&tokens), Some(true));
+        let Err(error) = match_parentheses(&tokens) else { panic!(); };
+        assert_eq!(error.kind(), ErrorKind::TooManyLeftParen);
 
         let tokens = vec![Token::LeftParen, Token::RightParen, Token::RightParen];
-        assert_eq!(match_parenthesis(&tokens), Some(false));
+        let Err(error) = match_parentheses(&tokens) else { panic!(); };
+        assert_eq!(error.kind(), ErrorKind::TooManyRightParen);
     }
 
     #[test]
