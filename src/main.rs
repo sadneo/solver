@@ -1,5 +1,5 @@
-use std::io;
 use solver::evaluate;
+use std::io;
 
 pub fn main() -> anyhow::Result<()> {
     let mut buffer = String::new();
