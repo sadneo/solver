@@ -9,6 +9,8 @@ pub enum Token {
     Minus,
     Multiply,
     Divide,
+    Modulo,
+    Exponent,
     LeftParen,
     RightParen,
 }
@@ -40,6 +42,8 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             '-' => tokens.push(Token::Minus),
             '*' => tokens.push(Token::Multiply),
             '/' => tokens.push(Token::Divide),
+            '%' => tokens.push(Token::Modulo),
+            '^' => tokens.push(Token::Exponent),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
             ' ' => {},
@@ -106,22 +110,41 @@ fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
-    let mut product = parse_primary(tokens, pos);
+    let mut product = parse_exponent(tokens, pos);
 
-    while *pos < tokens.len() && (tokens[*pos] == Token::Multiply || tokens[*pos] == Token::Divide)
+    while *pos < tokens.len() && (tokens[*pos] == Token::Multiply || tokens[*pos] == Token::Divide || tokens[*pos] == Token::Modulo)
     {
         let operator = &tokens[*pos];
         *pos += 1;
-        let primary = parse_factor(tokens, pos);
+        let power = parse_exponent(tokens, pos);
 
         match operator {
-            Token::Multiply => product *= primary,
-            Token::Divide => product /= primary,
+            Token::Multiply => product *= power,
+            Token::Divide => product /= power,
+            Token::Modulo => product %= power,
             _ => unreachable!(),
         }
     }
 
     product
+}
+
+fn parse_exponent(tokens: &[Token], pos: &mut usize) -> f64 {
+    let mut power = parse_primary(tokens, pos);
+
+    while *pos < tokens.len() && tokens[*pos] == Token::Exponent
+    {
+        let operator = &tokens[*pos];
+        *pos += 1;
+        let primary = parse_primary(tokens, pos);
+
+        match operator {
+            Token::Exponent => power = f64::powf(power, primary),
+            _ => unreachable!(),
+        }
+    }
+
+    power
 }
 
 fn parse_primary(tokens: &[Token], pos: &mut usize) -> f64 {

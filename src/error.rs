@@ -61,6 +61,8 @@ impl Error {
                 Token::Minus => "-",
                 Token::Multiply => "*",
                 Token::Divide => "/",
+                Token::Modulo => "%",
+                Token::Exponent => "^",
                 Token::LeftParen => "(",
                 Token::RightParen => ")",
             };
