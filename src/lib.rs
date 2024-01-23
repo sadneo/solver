@@ -2,8 +2,8 @@ use crate::error::{Error, ErrorKind, Result};
 
 pub mod error;
 
-#[derive(Debug, PartialEq)]
-enum Token {
+#[derive(Debug, PartialEq, Clone)]
+pub enum Token {
     Number(f64),
     Plus,
     Minus,
@@ -16,15 +16,15 @@ enum Token {
 fn tokenize(expression: &str) -> Result<Vec<Token>> {
     let mut tokens: Vec<Token> = vec![];
 
-    let mut iterator = expression.chars().peekable();
+    let mut iterator = expression.chars().enumerate().peekable();
 
-    while let Some(char) = iterator.peek() {
+    while let Some((index, char)) = iterator.peek() {
         match char {
             '0'..='9' | '.' => {
                 let mut buffer = char.to_string();
                 iterator.next();
 
-                while let Some(new) = iterator.peek() {
+                while let Some((_, new)) = iterator.peek() {
                     if !matches!(new, '0'..='9' | '.') {
                         break;
                     }
@@ -62,7 +62,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             ' ' => {
                 iterator.next();
             }
-            _ => return Err(Error::new(ErrorKind::InvalidToken)),
+            _ => return Err(Error::from_expression(ErrorKind::InvalidToken, expression.to_owned(), *index)),
         }
     }
 
@@ -71,19 +71,19 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
 
 fn match_parentheses(tokens: &[Token]) -> Result<()> {
     let mut balancer = 0;
-    for token in tokens {
+    for (index, token) in tokens.iter().enumerate() {
         if let Token::LeftParen = token {
             balancer += 1;
         } else if let Token::RightParen = token {
             balancer -= 1;
         }
         if balancer < 0 {
-            return Err(Error::new(ErrorKind::TooManyRightParen));
+            return Err(Error::new(ErrorKind::TooManyRightParen, tokens.to_vec(), index));
         }
     }
 
     if balancer > 0 {
-        Err(Error::new(ErrorKind::TooManyLeftParen))
+        Err(Error::new(ErrorKind::TooManyLeftParen, tokens.to_vec(), tokens.len() - 1))
     } else {
         Ok(())
     }
