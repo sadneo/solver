@@ -34,36 +34,18 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
 
                 let number = buffer.parse::<f64>().unwrap();
                 tokens.push(Token::Number(number));
+                continue;
             }
-            '+' => {
-                tokens.push(Token::Plus);
-                iterator.next();
-            }
-            '-' => {
-                tokens.push(Token::Minus);
-                iterator.next();
-            }
-            '*' => {
-                tokens.push(Token::Multiply);
-                iterator.next();
-            }
-            '/' => {
-                tokens.push(Token::Divide);
-                iterator.next();
-            }
-            '(' => {
-                tokens.push(Token::LeftParen);
-                iterator.next();
-            }
-            ')' => {
-                tokens.push(Token::RightParen);
-                iterator.next();
-            }
-            ' ' => {
-                iterator.next();
-            }
+            '+' => tokens.push(Token::Plus),
+            '-' => tokens.push(Token::Minus),
+            '*' => tokens.push(Token::Multiply),
+            '/' => tokens.push(Token::Divide),
+            '(' => tokens.push(Token::LeftParen),
+            ')' => tokens.push(Token::RightParen),
+            ' ' => {},
             _ => return Err(Error::from_expression(ErrorKind::InvalidToken, expression.to_owned(), *index)),
         }
+        iterator.next();
     }
 
     Ok(tokens)
