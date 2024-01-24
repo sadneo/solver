@@ -15,6 +15,7 @@ pub enum Token {
     Exponent,
     LeftParen,
     RightParen,
+    Negative,
 }
 
 fn tokenize(expression: &str) -> Result<Vec<Token>> {
@@ -41,7 +42,10 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
                 continue;
             }
             '+' => tokens.push(Token::Plus),
-            '-' => tokens.push(Token::Minus),
+            '-' => match tokens.last() {
+                Some(Token::Number(_)) | Some(Token::RightParen) => tokens.push(Token::Minus),
+                _ => tokens.push(Token::Negative),
+            },
             '*' => tokens.push(Token::Multiply),
             '/' => tokens.push(Token::Divide),
             '%' => tokens.push(Token::Modulo),

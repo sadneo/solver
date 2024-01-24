@@ -67,6 +67,7 @@ impl Error {
                 Token::Exponent => "^",
                 Token::LeftParen => "(",
                 Token::RightParen => ")",
+                Token::Negative => "-",
             };
 
             buffer.push_str(token_str);
