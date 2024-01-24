@@ -276,7 +276,33 @@ mod tests {
         let expected_result = vec![
             Token::LeftParen,
             Token::RightParen,
-            Token::Multiply,
+            Token::ImplicitMultiply,
+            Token::LeftParen,
+            Token::RightParen,
+        ];
+        assert_eq!(imply_multiplication(tokens), expected_result);
+
+        let tokens = vec![
+            Token::LeftParen,
+            Token::RightParen,
+            Token::Number(3.0),
+        ];
+        let expected_result = vec![
+            Token::LeftParen,
+            Token::RightParen,
+            Token::ImplicitMultiply,
+            Token::Number(3.0),
+        ];
+        assert_eq!(imply_multiplication(tokens), expected_result);
+
+        let tokens = vec![
+            Token::Number(3.0),
+            Token::LeftParen,
+            Token::RightParen,
+        ];
+        let expected_result = vec![
+            Token::Number(3.0),
+            Token::ImplicitMultiply,
             Token::LeftParen,
             Token::RightParen,
         ];
