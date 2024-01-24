@@ -10,6 +10,7 @@ pub enum Token {
     Multiply,
     Divide,
     Modulo,
+    ImplicitMultiply,
     Exponent,
     LeftParen,
     RightParen,
@@ -46,8 +47,14 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             '^' => tokens.push(Token::Exponent),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
-            ' ' => {},
-            _ => return Err(Error::from_expression(ErrorKind::InvalidToken, expression.to_owned(), *index)),
+            ' ' => {}
+            _ => {
+                return Err(Error::from_expression(
+                    ErrorKind::InvalidToken,
+                    expression.to_owned(),
+                    *index,
+                ))
+            }
         }
         iterator.next();
     }
@@ -64,12 +71,20 @@ fn match_parentheses(tokens: &[Token]) -> Result<()> {
             balancer -= 1;
         }
         if balancer < 0 {
-            return Err(Error::new(ErrorKind::TooManyRightParen, tokens.to_vec(), index));
+            return Err(Error::new(
+                ErrorKind::TooManyRightParen,
+                tokens.to_vec(),
+                index,
+            ));
         }
     }
 
     if balancer > 0 {
-        Err(Error::new(ErrorKind::TooManyLeftParen, tokens.to_vec(), tokens.len() - 1))
+        Err(Error::new(
+            ErrorKind::TooManyLeftParen,
+            tokens.to_vec(),
+            tokens.len() - 1,
+        ))
     } else {
         Ok(())
     }
@@ -79,8 +94,13 @@ fn imply_multiplication(mut tokens: Vec<Token>) -> Vec<Token> {
     for index in 0..tokens.len() - 1 {
         let token = &tokens[index];
         let next_token = &tokens[index + 1];
-        if *token == Token::RightParen && *next_token == Token::LeftParen {
-            tokens.insert(index + 1, Token::Multiply);
+
+        #[allow(clippy::nonminimal_bool)]
+        if (*token == Token::RightParen && *next_token == Token::LeftParen)
+            || (matches!(token, Token::Number(_)) && *next_token == Token::LeftParen)
+            || (matches!(next_token, Token::Number(_)) && *token == Token::RightParen)
+        {
+            tokens.insert(index + 1, Token::ImplicitMultiply);
         }
     }
 
@@ -110,18 +130,38 @@ fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
+    let mut product = parse_implicit_product(tokens, pos);
+
+    while *pos < tokens.len()
+        && (tokens[*pos] == Token::Multiply
+            || tokens[*pos] == Token::Divide
+            || tokens[*pos] == Token::Modulo)
+    {
+        let operator = &tokens[*pos];
+        *pos += 1;
+        let implicit_product = parse_implicit_product(tokens, pos);
+
+        match operator {
+            Token::Multiply => product *= implicit_product,
+            Token::Divide => product /= implicit_product,
+            Token::Modulo => product %= implicit_product,
+            _ => unreachable!(),
+        }
+    }
+
+    product
+}
+
+fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut product = parse_exponent(tokens, pos);
 
-    while *pos < tokens.len() && (tokens[*pos] == Token::Multiply || tokens[*pos] == Token::Divide || tokens[*pos] == Token::Modulo)
-    {
+    while *pos < tokens.len() && tokens[*pos] == Token::ImplicitMultiply {
         let operator = &tokens[*pos];
         *pos += 1;
         let power = parse_exponent(tokens, pos);
 
         match operator {
-            Token::Multiply => product *= power,
-            Token::Divide => product /= power,
-            Token::Modulo => product %= power,
+            Token::ImplicitMultiply => product *= power,
             _ => unreachable!(),
         }
     }
@@ -132,8 +172,7 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_exponent(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut power = parse_primary(tokens, pos);
 
-    while *pos < tokens.len() && tokens[*pos] == Token::Exponent
-    {
+    while *pos < tokens.len() && tokens[*pos] == Token::Exponent {
         let operator = &tokens[*pos];
         *pos += 1;
         let primary = parse_primary(tokens, pos);

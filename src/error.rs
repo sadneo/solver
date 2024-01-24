@@ -56,12 +56,13 @@ impl Error {
                 Token::Number(f64) => {
                     string = f64.to_string();
                     string.as_str()
-                },
+                }
                 Token::Plus => "+",
                 Token::Minus => "-",
                 Token::Multiply => "*",
                 Token::Divide => "/",
                 Token::Modulo => "%",
+                Token::ImplicitMultiply => "",
                 Token::Exponent => "^",
                 Token::LeftParen => "(",
                 Token::RightParen => ")",
@@ -79,14 +80,13 @@ impl Error {
         } else {
             unreachable!()
         }
-
     }
 
     pub fn from_expression(kind: ErrorKind, expression: String, index: usize) -> Self {
         Self {
             kind,
             expression,
-            index
+            index,
         }
     }
 
