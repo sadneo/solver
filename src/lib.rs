@@ -239,6 +239,35 @@ mod tests {
         let equal_to = vec![Token::Number(53.0), Token::Plus, Token::Number(110.0)];
         let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
+
+        let expression = String::from("6 * ((20 - 4) / 2 + 8) / 6");
+        let equal_to = vec![
+            Token::Number(6.0),
+            Token::Multiply,
+            Token::LeftParen,
+            Token::LeftParen,
+            Token::Number(20.0),
+            Token::Minus,
+            Token::Number(4.0),
+            Token::RightParen,
+            Token::Divide,
+            Token::Number(2.0),
+            Token::Plus,
+            Token::Number(8.0),
+            Token::RightParen,
+            Token::Divide,
+            Token::Number(6.0),
+        ];
+        let result = tokenize(&expression).unwrap();
+        assert!(compare_vec(&result, &equal_to));
+    }
+
+    #[test]
+    fn tokenize_negative() {
+        let expression = String::from("-53-110");
+        let equal_to = vec![Token::Negative, Token::Number(53.0), Token::Minus, Token::Number(110.0)];
+        let result = tokenize(&expression).unwrap();
+        assert!(compare_vec(&result, &equal_to));
     }
 
     #[test]
