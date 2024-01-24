@@ -10,6 +10,7 @@ pub enum Token {
     Multiply,
     Divide,
     Modulo,
+    Factorial, // write this into the parser
     ImplicitMultiply,
     Exponent,
     LeftParen,
@@ -44,6 +45,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             '*' => tokens.push(Token::Multiply),
             '/' => tokens.push(Token::Divide),
             '%' => tokens.push(Token::Modulo),
+            '!' => tokens.push(Token::Factorial),
             '^' => tokens.push(Token::Exponent),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),

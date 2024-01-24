@@ -62,6 +62,7 @@ impl Error {
                 Token::Multiply => "*",
                 Token::Divide => "/",
                 Token::Modulo => "%",
+                Token::Factorial => "!",
                 Token::ImplicitMultiply => "",
                 Token::Exponent => "^",
                 Token::LeftParen => "(",
