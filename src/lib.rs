@@ -158,6 +158,8 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
     product
 }
 
+// parse_factorial here
+
 fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut product = parse_exponent(tokens, pos);
 
@@ -176,20 +178,25 @@ fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_exponent(tokens: &[Token], pos: &mut usize) -> f64 {
-    let mut power = parse_primary(tokens, pos);
+    let mut power = parse_negative(tokens, pos);
 
     while *pos < tokens.len() && tokens[*pos] == Token::Exponent {
-        let operator = &tokens[*pos];
         *pos += 1;
-        let primary = parse_primary(tokens, pos);
+        let negative = parse_negative(tokens, pos);
 
-        match operator {
-            Token::Exponent => power = f64::powf(power, primary),
-            _ => unreachable!(),
-        }
+        power = f64::powf(power, negative);
     }
 
     power
+}
+
+fn parse_negative(tokens: &[Token], pos: &mut usize) -> f64 {
+    if let Token::Negative = tokens[*pos] {
+        *pos += 1;
+        -parse_primary(tokens, pos)
+    } else {
+        parse_primary(tokens, pos)
+    }
 }
 
 fn parse_primary(tokens: &[Token], pos: &mut usize) -> f64 {
