@@ -282,11 +282,7 @@ mod tests {
         ];
         assert_eq!(imply_multiplication(tokens), expected_result);
 
-        let tokens = vec![
-            Token::LeftParen,
-            Token::RightParen,
-            Token::Number(3.0),
-        ];
+        let tokens = vec![Token::LeftParen, Token::RightParen, Token::Number(3.0)];
         let expected_result = vec![
             Token::LeftParen,
             Token::RightParen,
@@ -295,11 +291,7 @@ mod tests {
         ];
         assert_eq!(imply_multiplication(tokens), expected_result);
 
-        let tokens = vec![
-            Token::Number(3.0),
-            Token::LeftParen,
-            Token::RightParen,
-        ];
+        let tokens = vec![Token::Number(3.0), Token::LeftParen, Token::RightParen];
         let expected_result = vec![
             Token::Number(3.0),
             Token::ImplicitMultiply,
@@ -311,7 +303,9 @@ mod tests {
 
     #[test]
     fn parsing_works() {
-        assert_eq!(evaluate("(30)(2)").unwrap(), 60.0);
+        assert_eq!(evaluate("6 * ((20 - 4) / 2 + 8) / 6").unwrap(), 16.0);
+        assert_eq!(evaluate("11 % 4").unwrap(), 3.0);
+        assert_eq!(evaluate("11 % (9)(5)").unwrap(), 11.0);
         assert_eq!(evaluate("30 + 13 * 3").unwrap(), 69.0);
         assert_eq!(evaluate("30 + (8 + 5) * 3").unwrap(), 69.0);
         assert_eq!(evaluate("10 / 2").unwrap(), 5.0);
