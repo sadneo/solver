@@ -1,4 +1,4 @@
-use crate::Token;
+use crate::{Token, Binary, Unary};
 use std::error::Error as StdError;
 use std::fmt;
 
@@ -57,17 +57,17 @@ impl Error {
                     string = f64.to_string();
                     string.as_str()
                 }
-                Token::Plus => "+",
-                Token::Minus => "-",
-                Token::Multiply => "*",
-                Token::Divide => "/",
-                Token::Modulo => "%",
-                Token::Factorial => "!",
-                Token::ImplicitMultiply => "",
-                Token::Exponent => "^",
+                Token::Binary(Binary::Plus) => "+",
+                Token::Binary(Binary::Minus) => "-",
+                Token::Binary(Binary::Multiply) => "*",
+                Token::Binary(Binary::Divide) => "/",
+                Token::Binary(Binary::Modulo) => "%",
+                Token::Unary(Unary::Factorial) => "!",
+                Token::Binary(Binary::ImplicitMultiply) => "",
+                Token::Binary(Binary::Exponent) => "^",
                 Token::LeftParen => "(",
                 Token::RightParen => ")",
-                Token::Negative => "-",
+                Token::Unary(Unary::Negative) => "-",
             };
 
             buffer.push_str(token_str);

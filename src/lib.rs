@@ -4,18 +4,54 @@ pub mod error;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+    Binary(Binary),
+    Unary(Unary),
     Number(f64),
+    LeftParen,
+    RightParen,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Binary {
     Plus,
     Minus,
     Multiply,
     Divide,
     Modulo,
-    Factorial, // write this into the parser
     ImplicitMultiply,
     Exponent,
-    LeftParen,
-    RightParen,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Unary {
     Negative,
+    Factorial,
+}
+
+trait Operator {
+    fn operate(&self, number: f64) -> f64;
+}
+
+pub struct UnaryNode {
+    operator: Unary,
+    left: Token,
+}
+
+impl Operator for UnaryNode {
+    fn operate(&self, number: f64) -> f64 {
+        match self.operator {
+            Unary::Negative => -number,
+            Unary::Factorial => {
+                (1..=number as u64).product::<u64>() as f64
+            }
+        }
+    }
+}
+
+pub struct BinaryNode {
+    operator: Token,
+    left: Token,
+    right: Token,
 }
 
 fn tokenize(expression: &str) -> Result<Vec<Token>> {
@@ -41,16 +77,15 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
                 tokens.push(Token::Number(number));
                 continue;
             }
-            '+' => tokens.push(Token::Plus),
+            '+' => tokens.push(Token::Binary(Binary::Plus)),
             '-' => match tokens.last() {
-                Some(Token::Number(_)) | Some(Token::RightParen) => tokens.push(Token::Minus),
-                _ => tokens.push(Token::Negative),
-            },
-            '*' => tokens.push(Token::Multiply),
-            '/' => tokens.push(Token::Divide),
-            '%' => tokens.push(Token::Modulo),
-            '!' => tokens.push(Token::Factorial),
-            '^' => tokens.push(Token::Exponent),
+                Some(Token::Number(_)) | Some(Token::RightParen) => tokens.push(Token::Binary(Binary::Minus)),
+                _ => tokens.push(Token::Unary(Unary::Negative)),
+            }
+            '*' => tokens.push(Token::Binary(Binary::Multiply)),
+            '/' => tokens.push(Token::Binary(Binary::Divide)),
+            '%' => tokens.push(Token::Binary(Binary::Modulo)),
+            '^' => tokens.push(Token::Binary(Binary::Exponent)),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
             ' ' => {}
@@ -106,7 +141,7 @@ fn imply_multiplication(mut tokens: Vec<Token>) -> Vec<Token> {
             || (matches!(token, Token::Number(_)) && *next_token == Token::LeftParen)
             || (matches!(next_token, Token::Number(_)) && *token == Token::RightParen)
         {
-            tokens.insert(index + 1, Token::ImplicitMultiply);
+            tokens.insert(index + 1, Token::Binary(Binary::ImplicitMultiply));
         }
     }
 
@@ -120,14 +155,14 @@ fn parse_expr(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut sum = parse_factor(tokens, pos);
 
-    while *pos < tokens.len() && (tokens[*pos] == Token::Plus || tokens[*pos] == Token::Minus) {
+    while *pos < tokens.len() && (tokens[*pos] == Token::Binary(Binary::Plus) || tokens[*pos] == Token::Binary(Binary::Minus)) {
         let operator = &tokens[*pos];
         *pos += 1;
         let factor = parse_factor(tokens, pos);
 
         match operator {
-            Token::Plus => sum += factor,
-            Token::Minus => sum -= factor,
+            Token::Binary(Binary::Plus) => sum += factor,
+            Token::Binary(Binary::Minus) => sum -= factor,
             _ => unreachable!(),
         }
     }
@@ -139,18 +174,18 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut product = parse_implicit_product(tokens, pos);
 
     while *pos < tokens.len()
-        && (tokens[*pos] == Token::Multiply
-            || tokens[*pos] == Token::Divide
-            || tokens[*pos] == Token::Modulo)
+        && (tokens[*pos] == Token::Binary(Binary::Multiply)
+            || tokens[*pos] == Token::Binary(Binary::Divide)
+            || tokens[*pos] == Token::Binary(Binary::Modulo))
     {
         let operator = &tokens[*pos];
         *pos += 1;
         let implicit_product = parse_implicit_product(tokens, pos);
 
         match operator {
-            Token::Multiply => product *= implicit_product,
-            Token::Divide => product /= implicit_product,
-            Token::Modulo => product %= implicit_product,
+            Token::Binary(Binary::Multiply) => product *= implicit_product,
+            Token::Binary(Binary::Divide) => product /= implicit_product,
+            Token::Binary(Binary::Modulo) => product %= implicit_product,
             _ => unreachable!(),
         }
     }
@@ -163,13 +198,13 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut product = parse_exponent(tokens, pos);
 
-    while *pos < tokens.len() && tokens[*pos] == Token::ImplicitMultiply {
+    while *pos < tokens.len() && tokens[*pos] == Token::Binary(Binary::ImplicitMultiply) {
         let operator = &tokens[*pos];
         *pos += 1;
         let power = parse_exponent(tokens, pos);
 
         match operator {
-            Token::ImplicitMultiply => product *= power,
+            Token::Binary(Binary::ImplicitMultiply) => product *= power,
             _ => unreachable!(),
         }
     }
@@ -180,7 +215,7 @@ fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_exponent(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut power = parse_negative(tokens, pos);
 
-    while *pos < tokens.len() && tokens[*pos] == Token::Exponent {
+    while *pos < tokens.len() && tokens[*pos] == Token::Binary(Binary::Exponent) {
         *pos += 1;
         let negative = parse_negative(tokens, pos);
 
@@ -191,7 +226,7 @@ fn parse_exponent(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_negative(tokens: &[Token], pos: &mut usize) -> f64 {
-    if let Token::Negative = tokens[*pos] {
+    if let Token::Unary(Unary::Negative) = tokens[*pos] {
         *pos += 1;
         -parse_primary(tokens, pos)
     } else {
@@ -243,26 +278,26 @@ mod tests {
     #[test]
     fn tokenize_works() {
         let expression = String::from("53+110");
-        let equal_to = vec![Token::Number(53.0), Token::Plus, Token::Number(110.0)];
+        let equal_to = vec![Token::Number(53.0), Token::Binary(Binary::Plus), Token::Number(110.0)];
         let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
 
         let expression = String::from("6 * ((20 - 4) / 2 + 8) / 6");
         let equal_to = vec![
             Token::Number(6.0),
-            Token::Multiply,
+            Token::Binary(Binary::Multiply),
             Token::LeftParen,
             Token::LeftParen,
             Token::Number(20.0),
-            Token::Minus,
+            Token::Binary(Binary::Minus),
             Token::Number(4.0),
             Token::RightParen,
-            Token::Divide,
+            Token::Binary(Binary::Divide),
             Token::Number(2.0),
-            Token::Plus,
+            Token::Binary(Binary::Plus),
             Token::Number(8.0),
             Token::RightParen,
-            Token::Divide,
+            Token::Binary(Binary::Divide),
             Token::Number(6.0),
         ];
         let result = tokenize(&expression).unwrap();
@@ -272,8 +307,9 @@ mod tests {
     #[test]
     fn tokenize_negative() {
         let expression = String::from("-53-110");
-        let equal_to = vec![Token::Negative, Token::Number(53.0), Token::Minus, Token::Number(110.0)];
+        let equal_to = vec![Token::Unary(Unary::Negative), Token::Number(53.0), Token::Binary(Binary::Minus), Token::Number(110.0)];
         let result = tokenize(&expression).unwrap();
+        println!("{:?}", result);
         assert!(compare_vec(&result, &equal_to));
     }
 
@@ -318,7 +354,7 @@ mod tests {
         let expected_result = vec![
             Token::LeftParen,
             Token::RightParen,
-            Token::ImplicitMultiply,
+            Token::Binary(Binary::ImplicitMultiply),
             Token::LeftParen,
             Token::RightParen,
         ];
@@ -328,7 +364,7 @@ mod tests {
         let expected_result = vec![
             Token::LeftParen,
             Token::RightParen,
-            Token::ImplicitMultiply,
+            Token::Binary(Binary::ImplicitMultiply),
             Token::Number(3.0),
         ];
         assert_eq!(imply_multiplication(tokens), expected_result);
@@ -336,7 +372,7 @@ mod tests {
         let tokens = vec![Token::Number(3.0), Token::LeftParen, Token::RightParen];
         let expected_result = vec![
             Token::Number(3.0),
-            Token::ImplicitMultiply,
+            Token::Binary(Binary::ImplicitMultiply),
             Token::LeftParen,
             Token::RightParen,
         ];
