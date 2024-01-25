@@ -62,7 +62,10 @@ impl Error {
                 Token::Binary(Binary::Multiply) => "*",
                 Token::Binary(Binary::Divide) => "/",
                 Token::Binary(Binary::Modulo) => "%",
-                Token::Unary(Unary::Factorial) => "!",
+                Token::Unary(Unary::Factorial(n)) => {
+                    string = "!".repeat(*n as usize);
+                    string.as_str()
+                },
                 Token::Binary(Binary::ImplicitMultiply) => "",
                 Token::Binary(Binary::Exponent) => "^",
                 Token::LeftParen => "(",

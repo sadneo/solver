@@ -25,33 +25,7 @@ pub enum Binary {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Unary {
     Negative,
-    Factorial,
-}
-
-trait Operator {
-    fn operate(&self, number: f64) -> f64;
-}
-
-pub struct UnaryNode {
-    operator: Unary,
-    left: Token,
-}
-
-impl Operator for UnaryNode {
-    fn operate(&self, number: f64) -> f64 {
-        match self.operator {
-            Unary::Negative => -number,
-            Unary::Factorial => {
-                (1..=number as u64).product::<u64>() as f64
-            }
-        }
-    }
-}
-
-pub struct BinaryNode {
-    operator: Token,
-    left: Token,
-    right: Token,
+    Factorial(u64),
 }
 
 fn tokenize(expression: &str) -> Result<Vec<Token>> {
@@ -85,7 +59,17 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             '*' => tokens.push(Token::Binary(Binary::Multiply)),
             '/' => tokens.push(Token::Binary(Binary::Divide)),
             '%' => tokens.push(Token::Binary(Binary::Modulo)),
-            '!' => tokens.push(Token::Unary(Unary::Factorial)),
+            '!' => {
+                let mut n = 1;
+                iterator.next();
+
+                while let Some((_, '!')) = iterator.peek() {
+                    n += 1;
+                    iterator.next();
+                }
+                tokens.push(Token::Unary(Unary::Factorial(n)));
+                continue;
+            },
             '^' => tokens.push(Token::Binary(Binary::Exponent)),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
@@ -197,23 +181,21 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_factorial(tokens: &[Token], pos: &mut usize) -> f64 {
     let implicit_product = parse_implicit_product(tokens, pos);
 
-    let mut step = 0;
-    while *pos < tokens.len() && tokens[*pos] == Token::Unary(Unary::Factorial) {
-        *pos += 1;
-        step += 1;
-    }
-
-    if step == 0 {
-        implicit_product
-    } else { // https://en.wikipedia.org/wiki/Double_factorial
-        let mut value = implicit_product as i64 - step;
-        let mut result = implicit_product as i64;
-
-        while value > 1 {
-            result *= value;
-            value -= step;
+    if *pos < tokens.len() {
+        let Token::Unary(Unary::Factorial(n)) = tokens[*pos] else {
+            return implicit_product;
         };
-        result as f64
+        let mut next_factor = implicit_product as u64 - n;
+        let mut factorial = implicit_product as u64;
+
+        while next_factor > 1 {
+            factorial *= next_factor;
+            next_factor -= n;
+        };
+        *pos += 1;
+        factorial as f64
+    } else {
+        implicit_product
     }
 }
 
