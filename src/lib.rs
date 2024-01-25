@@ -413,5 +413,8 @@ mod tests {
         assert_eq!(evaluate("2 * (3 + 4) / 2").unwrap(), 7.0);
         assert_eq!(evaluate("1 + 2 + 3 + 4 + 5").unwrap(), 15.0);
         assert_eq!(evaluate("(5 - 2) * (12 / 2)").unwrap(), 18.0);
+        assert_eq!(evaluate("9!").unwrap(), 362880.0);
+        assert_eq!(evaluate("(3!)!").unwrap(), 720.0);
+        assert_eq!(evaluate("(3!)^2").unwrap(), 36.0);
     }
 }
