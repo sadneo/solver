@@ -85,6 +85,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             '*' => tokens.push(Token::Binary(Binary::Multiply)),
             '/' => tokens.push(Token::Binary(Binary::Divide)),
             '%' => tokens.push(Token::Binary(Binary::Modulo)),
+            '!' => tokens.push(Token::Unary(Unary::Factorial)),
             '^' => tokens.push(Token::Binary(Binary::Exponent)),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
@@ -171,7 +172,7 @@ fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
 }
 
 fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
-    let mut product = parse_implicit_product(tokens, pos);
+    let mut product = parse_factorial(tokens, pos);
 
     while *pos < tokens.len()
         && (tokens[*pos] == Token::Binary(Binary::Multiply)
@@ -180,12 +181,12 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
     {
         let operator = &tokens[*pos];
         *pos += 1;
-        let implicit_product = parse_implicit_product(tokens, pos);
+        let factorial = parse_factorial(tokens, pos);
 
         match operator {
-            Token::Binary(Binary::Multiply) => product *= implicit_product,
-            Token::Binary(Binary::Divide) => product /= implicit_product,
-            Token::Binary(Binary::Modulo) => product %= implicit_product,
+            Token::Binary(Binary::Multiply) => product *= factorial,
+            Token::Binary(Binary::Divide) => product /= factorial,
+            Token::Binary(Binary::Modulo) => product %= factorial,
             _ => unreachable!(),
         }
     }
@@ -193,7 +194,28 @@ fn parse_factor(tokens: &[Token], pos: &mut usize) -> f64 {
     product
 }
 
-// parse_factorial here
+fn parse_factorial(tokens: &[Token], pos: &mut usize) -> f64 {
+    let implicit_product = parse_implicit_product(tokens, pos);
+
+    let mut step = 0;
+    while *pos < tokens.len() && tokens[*pos] == Token::Unary(Unary::Factorial) {
+        *pos += 1;
+        step += 1;
+    }
+
+    if step == 0 {
+        implicit_product
+    } else { // https://en.wikipedia.org/wiki/Double_factorial
+        let mut value = implicit_product as i64 - step;
+        let mut result = implicit_product as i64;
+
+        while value > 1 {
+            result *= value;
+            value -= step;
+        };
+        result as f64
+    }
+}
 
 fn parse_implicit_product(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut product = parse_exponent(tokens, pos);
