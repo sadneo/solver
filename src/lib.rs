@@ -53,9 +53,11 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
             }
             '+' => tokens.push(Token::Binary(Binary::Plus)),
             '-' => match tokens.last() {
-                Some(Token::Number(_)) | Some(Token::RightParen) => tokens.push(Token::Binary(Binary::Minus)),
+                Some(Token::Number(_)) | Some(Token::RightParen) => {
+                    tokens.push(Token::Binary(Binary::Minus))
+                }
                 _ => tokens.push(Token::Unary(Unary::Negative)),
-            }
+            },
             '*' => tokens.push(Token::Binary(Binary::Multiply)),
             '/' => tokens.push(Token::Binary(Binary::Divide)),
             '%' => tokens.push(Token::Binary(Binary::Modulo)),
@@ -69,7 +71,7 @@ fn tokenize(expression: &str) -> Result<Vec<Token>> {
                 }
                 tokens.push(Token::Unary(Unary::Factorial(n)));
                 continue;
-            },
+            }
             '^' => tokens.push(Token::Binary(Binary::Exponent)),
             '(' => tokens.push(Token::LeftParen),
             ')' => tokens.push(Token::RightParen),
@@ -140,7 +142,10 @@ fn parse_expr(tokens: &[Token], pos: &mut usize) -> f64 {
 fn parse_term(tokens: &[Token], pos: &mut usize) -> f64 {
     let mut sum = parse_factor(tokens, pos);
 
-    while *pos < tokens.len() && (tokens[*pos] == Token::Binary(Binary::Plus) || tokens[*pos] == Token::Binary(Binary::Minus)) {
+    while *pos < tokens.len()
+        && (tokens[*pos] == Token::Binary(Binary::Plus)
+            || tokens[*pos] == Token::Binary(Binary::Minus))
+    {
         let operator = &tokens[*pos];
         *pos += 1;
         let factor = parse_factor(tokens, pos);
@@ -191,7 +196,7 @@ fn parse_factorial(tokens: &[Token], pos: &mut usize) -> f64 {
         while next_factor > 1 {
             factorial *= next_factor;
             next_factor -= n;
-        };
+        }
         *pos += 1;
         factorial as f64
     } else {
@@ -282,7 +287,11 @@ mod tests {
     #[test]
     fn tokenize_works() {
         let expression = String::from("53+110");
-        let equal_to = vec![Token::Number(53.0), Token::Binary(Binary::Plus), Token::Number(110.0)];
+        let equal_to = vec![
+            Token::Number(53.0),
+            Token::Binary(Binary::Plus),
+            Token::Number(110.0),
+        ];
         let result = tokenize(&expression).unwrap();
         assert!(compare_vec(&result, &equal_to));
 
@@ -311,9 +320,13 @@ mod tests {
     #[test]
     fn tokenize_negative() {
         let expression = String::from("-53-110");
-        let equal_to = vec![Token::Unary(Unary::Negative), Token::Number(53.0), Token::Binary(Binary::Minus), Token::Number(110.0)];
+        let equal_to = vec![
+            Token::Unary(Unary::Negative),
+            Token::Number(53.0),
+            Token::Binary(Binary::Minus),
+            Token::Number(110.0),
+        ];
         let result = tokenize(&expression).unwrap();
-        println!("{:?}", result);
         assert!(compare_vec(&result, &equal_to));
     }
 

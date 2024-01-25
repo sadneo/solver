@@ -1,4 +1,4 @@
-use crate::{Token, Binary, Unary};
+use crate::{Binary, Token, Unary};
 use std::error::Error as StdError;
 use std::fmt;
 
@@ -65,7 +65,7 @@ impl Error {
                 Token::Unary(Unary::Factorial(n)) => {
                     string = "!".repeat(*n as usize);
                     string.as_str()
-                },
+                }
                 Token::Binary(Binary::ImplicitMultiply) => "",
                 Token::Binary(Binary::Exponent) => "^",
                 Token::LeftParen => "(",
